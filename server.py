@@ -1,5 +1,6 @@
 #  coding: utf-8 
-import socketserver
+import socketserver, os, urllib.parse
+from email.utils import formatdate
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -32,7 +33,78 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def handle(self):
         self.data = self.request.recv(1024).strip()
         print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+        data = self.data.split(b'\r\n')
+        get_value = b''
+        for request in data:
+            print(request)
+            if request.startswith(b'GET'):
+                get_value = request.split()[1]
+
+        header = ""
+        status = ""
+        date = ""
+        content_type = ""
+        content_length = ""
+        allow = ""
+        message = ""
+        file = b'./www' + get_value
+        file = urllib.parse.unquote(file.decode()).encode()
+        handled = False
+
+        if not data[0].startswith(b'GET'):
+            status = "HTTP/1.1 405 Method Not Allowed\r\n"
+            content_type = "Content-type:text/html\r\n"
+            allow = "Allow: GET\r\n"
+            message = "<h1>404 Not Found</h1>"
+
+        if os.path.isdir(file):
+            print("Is DIRec")
+            if not file.endswith(b'/'):
+                file += b'/'
+                newpath = file.decode()[5:]
+                status = 'HTTP/1.1 301 Moved Permanently\r\nLocation: ' + newpath + '\r\n'
+                handled = True
+                print("Is DIR")
+            else:
+                file += b'index.html'
+
+        if os.path.isfile(file) and not handled:
+            print(handled)
+            print(file)
+            print("File exists")
+            if status == "":
+                status = "HTTP/1.1 200 OK\r\n"
+            if (file.endswith(b'.html')):
+                content_type = "Content-type:text/html\r\n"
+                message = open(file, 'r').read()
+            elif (file.endswith(b'.css')):
+                content_type = "Content-type:text/css\r\n"
+                message = open(file, 'r').read()
+            else:
+                content_type = "Content-type:application/octet-stream\r\n"
+                message = open(file, 'rb').read()
+        elif not handled:
+            status = "HTTP/1.1 404 Not Found\r\n"
+            content_type = "Content-type:text/html\r\n"
+            message = "<h1>404 Not Found</h1>"
+
+        if len(message) > 0:
+            content_length = "Content-Length: " + str(len(message)) + "\r\n"
+        date = str(formatdate(timeval=None, localtime=False, usegmt=True)) + "\r\n"
+        header = status + date + content_length + "Connection: close\r\n" + content_type + allow + "\r\n"
+        print(header)
+        header = bytearray(header, 'utf-8')
+        if type(message) == str:
+            message = bytearray(message, 'utf-8')
+        self.request.sendall(header + message)
+
+                
+
+
+
+
+
+
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
