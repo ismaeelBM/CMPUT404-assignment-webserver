@@ -32,7 +32,7 @@ from pathlib import Path
 class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
-        self.data = self.request.recv(1024).strip()
+        self.data = self.request.recv(4096).strip()
         root = os.path.abspath("./www")
         # print ("Got a request of: %s\n" % self.data)
         data = self.data.split(b'\r\n')
@@ -113,19 +113,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
         date = "Date: " + str(formatdate(timeval=None, localtime=False, usegmt=True)) + "\r\n"
         header = status + date + content_length + "Connection: close\r\n" + content_type + allow + "\r\n"
-        print(header)
+        # print(header)
         header = bytearray(header, 'utf-8')
         if type(message) == str:
             message = bytearray(message, 'utf-8')
         self.request.sendall(header + message)
-
-                
-
-
-
-
-
-
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
