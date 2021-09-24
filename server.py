@@ -3,7 +3,7 @@ import socketserver, os, urllib.parse
 from email.utils import formatdate
 from pathlib import Path
 
-# Copyright 2013 Abram Hindle, Eddie Antonio Santos
+# Copyright 2013 Abram Hindle, Eddie Antonio Santos, Ismaeel Bin Mohiuddin
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
